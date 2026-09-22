@@ -63,3 +63,11 @@ class VerificationResult(BaseModel):
     reason: Optional[str] = None    # verified=False hone ki wajah
     match_start: Optional[int] = None
     match_end: Optional[int] = None
+
+
+class GuideAnswer(BaseModel):
+    question_number: int
+    expert_id: str
+    status: str                      # "answered" | "not_discussed" | "unverified"
+    summary: str                     # LLM ka 1-2 line paraphrase, based on verified evidence
+    evidence: List[VerificationResult]

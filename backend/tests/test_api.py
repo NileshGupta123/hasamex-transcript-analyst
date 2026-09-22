@@ -3,16 +3,21 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
-
 pytestmark = pytest.mark.skipif(
     not os.getenv("GROQ_API_KEY"), reason="GROQ_API_KEY set nahi hai"
 )
 
 
-@pytest.fixture(scope="module")
-def client():
-    with TestClient(app) as c:  # startup/shutdown events chalata hai
+@pytest.fixture
+def client(all_guide_answers, theme_items, monkeypatch):
+    """conftest.py ke already-computed guide_answers/themes reuse karta hai,
+    taaki FastAPI startup dobara LLM calls na kare (token budget bachane ke liye)."""
+    import app.main as main_module
+
+    monkeypatch.setattr(main_module, "get_all_guide_answers", lambda *a, **kw: all_guide_answers)
+    monkeypatch.setattr(main_module, "get_themes_and_disagreements", lambda *a, **kw: theme_items)
+
+    with TestClient(main_module.app) as c:  # startup event chalega, par patched functions se, LLM call nahi
         yield c
 
 
@@ -66,7 +71,9 @@ def test_transcript_not_found(client):
     assert response.status_code == 404
 
 
-def test_ask(client):
+def test_ask(client, monkeypatch):
+    """Ye ek endpoint ke through jaata hai isliye ek live LLM call lagti hai,
+    par sirf ek — /api/ask deliberately live hai (Q&A free-form hota hai)."""
     response = client.post("/api/ask", json={"question": "What barriers did experts mention?"})
     assert response.status_code == 200
     data = response.json()

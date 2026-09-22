@@ -3,9 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from app.guide_answers import get_all_guide_answers, get_guide_answers
-from app.parser import load_all_transcripts, load_interview_guide
-
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 pytestmark = pytest.mark.skipif(
@@ -14,18 +11,8 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="module")
-def transcripts():
-    return load_all_transcripts(DATA_DIR)
-
-
-@pytest.fixture(scope="module")
-def guide():
-    return load_interview_guide(DATA_DIR / "Interview_Guide.txt")
-
-
-@pytest.fixture(scope="module")
-def e1_answers(transcripts, guide):
-    return get_guide_answers(transcripts[0], guide)
+def e1_answers(all_guide_answers):
+    return [a for a in all_guide_answers if a.expert_id == "E1"]
 
 
 def test_one_answer_per_question(e1_answers, guide):
@@ -53,8 +40,7 @@ def test_not_discussed_has_no_evidence(e1_answers):
             assert answer.summary == ""
 
 
-def test_all_experts(transcripts, guide):
-    all_answers = get_all_guide_answers(transcripts, guide)
-    assert len(all_answers) == len(transcripts) * len(guide.questions)
-    expert_ids = {a.expert_id for a in all_answers}
+def test_all_experts(all_guide_answers, transcripts, guide):
+    assert len(all_guide_answers) == len(transcripts) * len(guide.questions)
+    expert_ids = {a.expert_id for a in all_guide_answers}
     assert expert_ids == {"E1", "E2", "E3"}

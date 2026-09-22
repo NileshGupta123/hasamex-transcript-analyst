@@ -1,21 +1,12 @@
 import os
-from pathlib import Path
 
 import pytest
 
-from app.parser import load_all_transcripts
 from app.qa import ask_question
-
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("GROQ_API_KEY"), reason="GROQ_API_KEY set nahi hai"
 )
-
-
-@pytest.fixture(scope="module")
-def transcripts():
-    return load_all_transcripts(DATA_DIR)
 
 
 def test_answerable_question_has_verified_evidence(transcripts):

@@ -78,3 +78,10 @@ class ThemeItem(BaseModel):
     title: str                       # short heading
     summary: str                     # 1-3 line explanation
     evidence: List[VerificationResult]  # across experts
+
+
+class QAResult(BaseModel):
+    question: str
+    status: str                      # "answered" | "unanswerable"
+    answer: str
+    evidence: List[VerificationResult]

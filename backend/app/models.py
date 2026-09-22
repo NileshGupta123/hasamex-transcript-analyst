@@ -71,3 +71,10 @@ class GuideAnswer(BaseModel):
     status: str                      # "answered" | "not_discussed" | "unverified"
     summary: str                     # LLM ka 1-2 line paraphrase, based on verified evidence
     evidence: List[VerificationResult]
+
+
+class ThemeItem(BaseModel):
+    kind: str                        # "theme" | "disagreement"
+    title: str                       # short heading
+    summary: str                     # 1-3 line explanation
+    evidence: List[VerificationResult]  # across experts

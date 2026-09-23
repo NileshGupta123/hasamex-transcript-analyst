@@ -37,18 +37,31 @@ _state = {
 
 @app.on_event("startup")
 def startup() -> None:
+    from app import cache
+
     logger.info("Loading transcripts and interview guide...")
     transcripts = load_all_transcripts(DATA_DIR)
     guide = load_interview_guide(DATA_DIR / "Interview_Guide.txt")
     _state["transcripts"] = transcripts
     _state["guide"] = guide
 
-    logger.info("Precomputing guide answers (LLM calls)...")
-    guide_answers = get_all_guide_answers(transcripts, guide)
+    if cache.guide_answers_cached():
+        logger.info("Loading guide answers from cache (no LLM call)...")
+        guide_answers = cache.load_guide_answers()
+    else:
+        logger.info("Precomputing guide answers (LLM calls)...")
+        guide_answers = get_all_guide_answers(transcripts, guide)
+        cache.save_guide_answers(guide_answers)
     _state["guide_answers"] = guide_answers
 
-    logger.info("Precomputing themes and disagreements (LLM call)...")
-    _state["themes"] = get_themes_and_disagreements(guide_answers, transcripts)
+    if cache.themes_cached():
+        logger.info("Loading themes from cache (no LLM call)...")
+        themes = cache.load_themes()
+    else:
+        logger.info("Precomputing themes and disagreements (LLM call)...")
+        themes = get_themes_and_disagreements(guide_answers, transcripts)
+        cache.save_themes(themes)
+    _state["themes"] = themes
 
     logger.info("Startup complete: %d transcripts, %d guide answers, %d theme items",
                 len(transcripts), len(guide_answers), len(_state["themes"]))
